@@ -1,15 +1,23 @@
-import Pizza from "./pizza";
+import Pizza from "./Pizza";
+import Cart from './Cart';
 import { useEffect, useState } from "react";
 export default function Order() {
   const [pizzaTypes, setPizzaTypes] = useState([]);
-  const [pizzaType, setPizzaType] = useState("Pepperoni");
+  const [pizzaType, setPizzaType] = useState("pepperoni");
   const [pizzaSize, setPizzaSize] = useState("M");
   const [loading, setLoading] = useState(true);
+  const [cart, setCart] = useState([]);
 
   let price, selectedPizza;
 
   if (!loading) {
     selectedPizza = pizzaTypes.find((pizza) => pizzaType === pizza.id);
+    if (selectedPizza) {
+      price = new Intl.NumberFormat("en-KE", {
+        style: "currency",
+        currency: "KES",
+      }).format(selectedPizza.sizes[pizzaSize] * 100);
+    }
   }
 
   async function fetchPizzaTypes() {
@@ -23,9 +31,13 @@ export default function Order() {
     fetchPizzaTypes();
   }, []);
   return (
+    <div className="order-page">
     <div className="order">
       <h2>Create Order</h2>
-      <form action="">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        setCart([...cart,{pizza: selectedPizza, size: pizzaSize, price}]);
+      }}>
         <div>
           <div>
             <label htmlFor="pizza-type">Pizza Type</label>
@@ -80,16 +92,24 @@ export default function Order() {
             </div>
           </div>
           <button type="submit">Add to Cart</button>
+        </div>
+        {loading ? (
+          <h1>Loading pizza...</h1>
+        ) : (
           <div className="order-pizza">
             <Pizza
-              name="pepperoni"
-              description="another pep pizza"
-              image={"/public/pizzas/pepperoni.webp"}
+              name={selectedPizza.name}
+              description={selectedPizza.description}
+              image={selectedPizza.image}
             />
-            <p>Ksh. 800</p>
+            <p>{price}</p>
           </div>
-        </div>
+        )}
       </form>
+      </div>
+      {
+        loading? <h2>Loading cart...</h2>: <Cart cart={cart} />
+      }
     </div>
   );
 }
